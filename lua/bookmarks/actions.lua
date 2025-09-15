@@ -155,7 +155,7 @@ M.bookmark_next = function()
     jump_line(false)
 end
 
-M.bookmark_list = function()
+M.bookmark_data = function()
     local allmarks = config.cache.data
     local marklist = {}
     for k, ma in pairs(allmarks) do
@@ -166,6 +166,11 @@ M.bookmark_list = function()
             table.insert(marklist, { filename = k, lnum = l, text = v.m .. "|" .. (v.a or "") })
         end
     end
+    return marklist
+end
+
+M.bookmark_list = function()
+    local marklist = M.bookmark_data()
     utils.setqflist(marklist)
 end
 

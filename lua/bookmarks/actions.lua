@@ -91,7 +91,7 @@ M.bookmark_line = function(lnum, bufnr)
     return lnum and marks[tostring(lnum)] or marks
 end
 
-M.bookmark_ann = function()
+M.bookmark_ann = function(default)
     local lnum = api.nvim_win_get_cursor(0)[1]
     local bufnr = current_buf()
     local signlines = { {
@@ -99,7 +99,7 @@ M.bookmark_ann = function()
         lnum = lnum,
     } }
     local mark = M.bookmark_line(lnum, bufnr)
-    vim.ui.input({ prompt = "Edit:", default = mark.a }, function(answer)
+    vim.ui.input({ prompt = "Edit:", default = mark.a or default }, function(answer)
         if answer == nil then
             return
         end

@@ -200,18 +200,19 @@ M.refresh = function(bufnr)
     end
 end
 
-function M.loadBookmarks()
+function M.loadBookmarks(bufnr)
     if utils.path_exists(config.save_file) then
         utils.read_file(config.save_file, function(data)
             config.cache = vim.json.decode(data)
             config.marks = data
 
-            -- This function is called asynchronously
-            -- So we can emit an event to refresh ui
+            -- call the refresh function directly will cause an error:
+            -- E5560: nvim_exec_autocmds must not be called in a fast event context
+            --
+            -- in order to fix it, we should put it into a schedule which will
+            -- called on the next neovim event loop
             vim.schedule(function()
-                vim.api.nvim_exec_autocmds("User", {
-                    pattern = "LoadBookmarks",
-                })
+                M.refresh(bufnr)
             end)
         end)
     end

@@ -35,7 +35,7 @@ end
 M.attach = void(function(bufnr)
     bufnr = bufnr or current_buf()
     scheduler()
-    actions.loadBookmarks()
+    actions.loadBookmarks(bufnr)
     if config.config.on_attach then
         config.config.on_attach(bufnr)
     end
@@ -76,14 +76,6 @@ M.setup = void(function(cfg)
         M.attach()
         autocmd("FocusGained", actions.refresh)
         autocmd("BufReadPost", actions.refresh)
-        api.nvim_create_autocmd("User", {
-            group = "bookmarks",
-            pattern = "LoadBookmarks",
-            desc = "after load bookmarks",
-            callback = function()
-                actions.refresh()
-            end,
-        })
     end)
 end)
 

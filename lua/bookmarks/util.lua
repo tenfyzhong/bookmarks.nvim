@@ -90,6 +90,24 @@ function M.prompt_yes_no(prompt, callback, prompt_no_cr)
    end
 end
 
+function M.get_project_bm_file(callback)
+   vim.fn.jobstart({ "git", "rev-parse", "--show-toplevel" }, {
+      on_stdout = function(_, data)
+         if data and data[1] and #data[1] > 0 then
+            local root = data[1]
+            callback(root .. M.path_sep .. ".bookmarks.json")
+         end
+      end,
+      on_exit = function(_, code)
+         if code ~= 0 then
+            -- Not a git repository or git command failed, fallback to global file
+            local global_file = vim.fn.stdpath "data" .. M.path_sep .. "bookmarks.json"
+            callback(global_file)
+         end
+      end,
+   })
+end
+
 M.write_file = function(path, content)
    uv.fs_open(path, "w", 438, function(open_err, fd)
       assert(not open_err, open_err)

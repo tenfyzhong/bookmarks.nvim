@@ -201,28 +201,45 @@ M.refresh = function(bufnr)
 end
 
 function M.loadBookmarks(bufnr)
-    if utils.path_exists(config.save_file) then
-        utils.read_file(config.save_file, function(data)
-            config.cache = vim.json.decode(data)
-            config.marks = data
+    utils.get_project_bm_file(function(path)
+        if utils.path_exists(path) then
+            utils.read_file(path, function(data)
+                local ok, decoded_data = pcall(vim.json.decode, data)
+                if ok and decoded_data then
+                    config.cache = decoded_data
+                    config.marks = data
+                else
+                    -- Handle json decode error, maybe notify user or just reset
+                    M.bookmark_clear_all()
+                end
 
-            -- call the refresh function directly will cause an error:
-            -- E5560: nvim_exec_autocmds must not be called in a fast event context
-            --
-            -- in order to fix it, we should put it into a schedule which will
-            -- called on the next neovim event loop
+                -- call the refresh function directly will cause an error:
+                -- E5560: nvim_exec_autocmds must not be called in a fast event context
+                --
+                -- in order to fix it, we should put it into a schedule which will
+                -- call the refresh function directly will cause an error:
+                vim.schedule(function()
+                    M.refresh(bufnr)
+                end)
+            end)
+        else
+            -- If the file doesn't exist, ensure cache is clean
+            M.bookmark_clear_all()
             vim.schedule(function()
                 M.refresh(bufnr)
             end)
-        end)
-    end
+        end
+    end)
 end
 
 function M.saveBookmarks()
-    local data = vim.json.encode(config.cache)
-    if config.marks ~= data then
-        utils.write_file(config.save_file, data)
-    end
+    utils.get_project_bm_file(function(path)
+        local data = vim.json.encode(config.cache)
+        if config.marks ~= data then
+            utils.write_file(path, data)
+            config.marks = data -- Update marks after saving
+        end
+    end)
 end
 
 function M.bookmark_clear_all()
